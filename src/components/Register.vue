@@ -31,7 +31,6 @@
 </template>
 
 <script>
-import auth from '@/services/auth';
 import axios from '@/services/axios';
 import { mapActions } from 'vuex/dist/vuex.cjs.js';
 
@@ -76,19 +75,6 @@ export default {
         this.snackbar = true;
         console.error('Error registering user:', error);
       });
-
-      // auth.register(user)
-      //   .then(response => {
-      //     this.snackbarMessage = 'User registered successfully!';
-      //     this.snackbarColor = 'success';
-      //     this.snackbar = true;
-      //   })
-      //   .catch(error => {
-      //     this.snackbarMessage = 'Error registering user. Please try again.';
-      //     this.snackbarColor = 'error';
-      //     this.snackbar = true;
-      //     console.error('Error registering user:', error);
-      //   });
     },
     fetchFonctions() {
       auth.getFonctions()

@@ -201,7 +201,7 @@ export default {
 }
 
 .div {
-  height: fit-content;
+  margin-top: 100px;
   width: 100vw;
   display: flex;
   flex-direction: column;

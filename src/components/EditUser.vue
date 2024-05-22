@@ -31,7 +31,6 @@
 </template>
 
 <script>
-import auth from '@/services/auth';
 import axios from 'axios';
 
 export default {

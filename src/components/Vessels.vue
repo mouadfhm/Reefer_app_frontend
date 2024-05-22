@@ -12,11 +12,11 @@
           </div>
 
           <v-card-actions class="btns">
-            <div @click="load" class="btn">
-              <v-btn >Load</v-btn>
+            <div @click="load(vessel)" class="btn">
+              <v-btn>Load</v-btn>
             </div>
-            <div @click="fetchVesselsMethode" class="btn">
-              <v-btn >Discharge</v-btn>
+            <div @click="discharge(vessel)" class="btn">
+              <v-btn>Discharge</v-btn>
             </div>
           </v-card-actions>
 
@@ -27,6 +27,7 @@
 </template>
 
 <script>
+import load from '@/store/load';
 import axios from 'axios';
 import { mapGetters, mapActions } from "vuex";
 
@@ -36,17 +37,18 @@ export default {
   data() {
     return {
       vessels: [],
+      loads: [],
     };
   },
   computed: {
-    ...mapGetters(["getVessels"]),
+    ...mapGetters(["getVessels", "getLoads"]),
   },
   mounted() {
     this.fetchVesselsMethode();
   },
 
   methods: {
-    ...mapActions(["fetchVessels"]),
+    ...mapActions(["fetchVessels",'fetchload']),
     fetchVesselsMethode() {
       this.fetchVessels()
         .then(() => {
@@ -56,8 +58,14 @@ export default {
           console.error('Error fetching vessels:', error);
         });
     },
-    load() {
-      console.log('load')
+    load(vessel) {
+      console.log(vessel.id);
+      this.fetchload({vessel_id:vessel.id}).then(() => {
+      this.loads=this.getLoads;
+
+      this.$router.push(`/load`);
+
+      })
     }
   },
 };
@@ -71,7 +79,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  
+
 }
 
 
@@ -97,7 +105,7 @@ export default {
   width: fit-content;
   gap: 1rem;
 
- 
+
 }
 
 .btn {
@@ -109,7 +117,7 @@ export default {
   padding: 2px !important;
   border-radius: 10px !important;
   text-align: center;
-  background-color: #135D66  !important;
+  background-color: #135D66 !important;
   color: #E3FEF7 !important;
 }
 

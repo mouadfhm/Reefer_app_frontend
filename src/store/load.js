@@ -1,25 +1,25 @@
 import CustomizedAxios from '../services/axios';
 
 const state = {
-    fonctions: [],
+    loads: [],
 };
 
 const mutations = {
-    SET_FONCTIONS(state, fonctions) {
-        state.fonctions = fonctions;
+    SET_LOADS(state, loads) {
+        state.loads = loads;
     },
 };
 
 const getters = {
-    getFonctions: (state) => state.fonctions,
+    getLoads: (state) => state.loads,
 };
 
 const actions = {
-    fetchFonctions({ commit }) {
+    fetchload({ commit },vessel) {
         return new Promise((resolve, reject) => {
-            CustomizedAxios.get("/fonction/")
+            CustomizedAxios.post("/load/byvessel",vessel)
               .then((response) => {
-                commit("SET_FONCTIONS", response.data.payload);
+                commit("SET_LOADS", response.data.payload);
                 resolve(response.data.payload);
               })
               .catch((error) => {
