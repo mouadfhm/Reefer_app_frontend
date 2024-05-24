@@ -3,11 +3,16 @@ import CustomizedAxios from '../services/axios';
 
 const state = {
     Vessels: [],
+    selectedVessel: null,
 };
 
 const mutations = {
     SET_VESSELS(state, Vessels) {
         state.Vessels = Vessels;
+    },
+
+    SET_SELECTED_VESSEL(state, selectedVessel) {
+        state.selectedVessel = selectedVessel;
     },
 };
 
@@ -28,6 +33,10 @@ const actions = {
               });
           });
 
+    },
+
+    selectVessel({ commit }, selectedVessel) {
+        commit("SET_SELECTED_VESSEL", selectedVessel);
     },
 };
 

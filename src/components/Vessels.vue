@@ -46,7 +46,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(["fetchVessels",'fetchload']),
+    ...mapActions(["fetchVessels",'fetchload','selectVessel']),
     fetchVesselsMethode() {
       this.fetchVessels()
         .then(() => {
@@ -57,13 +57,9 @@ export default {
         });
     },
     load(vessel) {
-      console.log(vessel.id);
-      this.fetchload({vessel_id:vessel.id}).then(() => {
-      this.loads=this.getLoads;
-
-      this.$router.push(`/load`);
-
-      })
+      this.selectVessel(vessel).then(() => {
+        this.$router.push(`/load`);
+      });
     }
   },
 };
@@ -77,7 +73,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 5%;
+  padding: 3%;
 
 }
 
@@ -90,7 +86,7 @@ export default {
   background-color: #E3FEF7;
   color: #003C43;
   border-radius: 8px;
-  padding: 20px 10% 20px 10%;
+  padding: 10px 7% 10px 7%;
   margin-bottom: 20px;
   text-align: center;
   width: fit-content;

@@ -9,7 +9,7 @@
       </v-card-title>
 
       <v-col class="col" cols="12">
-        <v-btn class="button" @click="applyFilter"><v-icon>mdi-filter</v-icon>Filter</v-btn>
+        <v-btn class="filterButton" @click="applyFilter"><v-icon>mdi-filter</v-icon>Filter</v-btn>
       </v-col>
 
       <v-data-table :headers="headers" :items="loads" class="table-background elevation-1">
@@ -117,13 +117,17 @@ export default {
       this.$refs.form.validate();
     },
     fetchLoadsMethod() {
-      this.loads = this.getLoads;
-      console.log(this.loads);
+      this.fetchload({vessel_id:this.$store.state.vessel.selectedVessel.id}).then(() => {
+        this.loads=this.getLoads;
+        console.log(this.loads);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
     },
     fetchIssueTypesMethod() {
       this.fetchIssueTypes().then(() => {
         this.issues = this.getIssueTypes;
-        console.log(this.issues);
       })
       .catch((error) => {
         console.error(error);
@@ -148,10 +152,13 @@ export default {
       if (this.currentItem) {
         this.changeStatus(this.currentItem)
         .then(() => {
-          if(this.user){
-            this.data = [{'user_id' : this.user.id}, {'reefer_id' : this.currentItem.id}]
-            this.addActionHistory(this.data).then(() => {
-            console.log('Action history added');
+          if(this.user.currentUser){
+            const data = {
+                user_id: this.$store.state.user.currentUser.id,
+                reefer_id: this.currentItem.id,
+              };
+            this.addActionHistory(data).then(() => {
+              console.log('Action history added');
           })
 
           }
