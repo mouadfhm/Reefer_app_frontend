@@ -1,6 +1,5 @@
 <template>
   <div class="background">
-    <v-container class="vessel-container">
       <v-row v-for="vessel in vessels" :key="vessel.id" cols="12" md="4">
         <v-card class="vessel-box">
           <div>
@@ -22,7 +21,6 @@
 
         </v-card>
       </v-row>
-    </v-container>
   </div>
 </template>
 
@@ -79,6 +77,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 5%;
 
 }
 

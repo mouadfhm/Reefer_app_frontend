@@ -55,7 +55,6 @@ export default {
   top: 20px;
   left: 20px;
   right: 20px;
-  border-radius: 8px;
 }
 
 .v-toolbar-title {

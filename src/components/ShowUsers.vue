@@ -1,7 +1,13 @@
 <template>
   <div class="div">
 
-    <v-card class="mx-auto" max-width="800">
+    <v-card class="pa-4">
+      <v-card-title>
+        <v-toolbar flat>
+          <v-toolbar-title>Users List</v-toolbar-title>
+          <v-divider class="mx-4" inset vertical></v-divider>
+        </v-toolbar>
+      </v-card-title>
       <!-- Users table -->
       <v-data-table :headers="headers" :items="users" class="table-background">
         <template v-slot:item.actions="{ item }">
@@ -49,7 +55,8 @@
         <v-text-field dense label="Matricule" prepend-inner-icon="mdi-account-outline"
           v-model="userToEdit.matricule"></v-text-field>
 
-        <v-text-field dense label="Email" prepend-inner-icon="mdi-email-outline" v-model="userToEdit.email"></v-text-field>
+        <v-text-field dense label="Email" prepend-inner-icon="mdi-email-outline"
+          v-model="userToEdit.email"></v-text-field>
 
         <v-text-field dense label="First Name" prepend-inner-icon="mdi-account-outline"
           v-model="userToEdit.firstname"></v-text-field>
@@ -81,18 +88,18 @@ export default {
       dialog: false,
       userToDelete: null,
       editDialog: false,
-      userToEdit : null,
+      userToEdit: null,
       headers: [
-        { title: 'Matricule', value: 'matricule' },
-        { title: 'Name', value: 'name' },
-        { title: 'Email', value: 'email' },
-        { title: 'Role', value: 'role' },
+        { title: 'Matricule', value: 'matricule', sortable: true },
+        { title: 'Name', value: 'name', sortable: true },
+        { title: 'Email', value: 'email', sortable: true },
+        { title: 'Role', value: 'role', sortable: true },
         { title: 'Actions', value: 'actions', sortable: false },
       ],
     };
   },
   computed: {
-    ...mapGetters(["getCurrentUser","getUsers", "getFonctions"]),
+    ...mapGetters(["getCurrentUser", "getUsers", "getFonctions"]),
   },
   mounted() {
     this.fetchUsersMethod();
@@ -100,15 +107,15 @@ export default {
   },
   methods: {
     ...mapActions([
-            "updateAction",
-            "fetchUsers",
-            "deleteAction",
-            "passwordResetAction",
-            "fetchFonctions",
-        ]),
-        fetchUsersMethod() {
-          const currentUser = this.getCurrentUser;
-          console.log('Current user:', currentUser);
+      "updateAction",
+      "fetchUsers",
+      "deleteAction",
+      "passwordResetAction",
+      "fetchFonctions",
+    ]),
+    fetchUsersMethod() {
+      const currentUser = this.getCurrentUser;
+      console.log('Current user:', currentUser);
       this.fetchUsers()
         .then(() => {
           this.users = this.getUsers.map(user => ({
@@ -143,7 +150,7 @@ export default {
             this.snackbar1 = true; // Show success message
             this.users = this.users.filter(u => u.id !== this.userToDelete.id);
             console.log('User deleted:', this.userToDelete);
-            this.userToDelete = null;            
+            this.userToDelete = null;
             this.fetchUsersMethod();
           })
           .catch(error => {
@@ -176,7 +183,7 @@ export default {
         lastname: user.lastname,
         fonction_id: user.fonction_id
       }
-    
+
     },
     handleModification() {
       this.editDialog = false;
@@ -201,18 +208,20 @@ export default {
 }
 
 .div {
-  margin-top: 100px;
   width: 100vw;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: #003C43;
+  padding: 5%;
+
 }
 
 .table-background {
   background-color: #E3FEF7 !important;
   color: #003C43 !important;
+
 }
 
 .confirmation {
@@ -228,5 +237,15 @@ export default {
   border-radius: 8px;
   margin-bottom: 0px;
   width: 100%;
+}
+
+.v-toolbar {
+  text-align: center;
+  background-color: #135D66;
+  border-radius: 8px;
+}
+
+.v-toolbar-title {
+  color: #E3FEF7;
 }
 </style>

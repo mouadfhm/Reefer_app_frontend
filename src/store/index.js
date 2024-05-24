@@ -5,6 +5,9 @@ import fonction from './fonction';
 import { createStore } from 'vuex'
 import vessel from './vessel';
 import load from './load';
+import reefer from './reefer';
+import issueType from './issueType';
+import actionHistory from './actionHistory';
 
 const vuexLocalStorage = new VuexPersist({
     key: "ReeferApp",
@@ -13,7 +16,10 @@ const vuexLocalStorage = new VuexPersist({
       user: state.user,
       fonction: state.fonction,
       vessel: state.vessel,
-      load: state.load
+      load: state.load,
+      reefer: state.reefer,
+      issueType: state.issueType,
+      actionHistory: state.actionHistory
     }),
     filter: (mutation) => true,
   });
@@ -23,7 +29,10 @@ const Store = createStore({
       user: user,
       fonction: fonction,
       vessel: vessel,
-      load: load
+      load: load,
+      reefer: reefer,
+      issueType: issueType,
+      actionHistory: actionHistory
     },
     plugins: [vuexLocalStorage.plugin],
   })
