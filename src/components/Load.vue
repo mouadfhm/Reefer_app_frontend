@@ -77,13 +77,13 @@ export default {
         row: '',
       },
       headers: [
-        { title: 'Ctr ID', value: 'reefer.ctr_id', sortable: true },
-        { title: 'ISO', value: 'reefer.ISO', sortable: true },
-        { title: 'LOP', value: 'reefer.LOP', sortable: true },
-        { title: 'Current LOC', value: 'reefer.current_LOC', sortable: true },
-        { title: 'TEMP', value: 'reefer.temperature', sortable: true },
-        { title: 'Vessel plan position', value: 'plan_position', sortable: true },
-        { title: 'Estimated load time', value: 'estimated_time', sortable: true },
+        { title: 'Ctr ID', value: 'reefer.ctr_id',  },
+        { title: 'ISO', value: 'reefer.ISO',  },
+        { title: 'LOP', value: 'reefer.LOP',  },
+        { title: 'Current LOC', value: 'reefer.current_LOC',  },
+        { title: 'TEMP', value: 'reefer.temperature',  },
+        { title: 'Vessel plan position', value: 'plan_position',  },
+        { title: 'Estimated load time', value: 'estimated_time',  },
         { title: 'Plug status', value: 'reefer.plug_status', sortable: true },
       ],
       loads: [],
@@ -219,7 +219,7 @@ export default {
   color: #E3FEF7;
 }
 
-.button {
+.filterButton {
   background-color: #77B0AA !important;
   color: #E3FEF7 !important;
 }

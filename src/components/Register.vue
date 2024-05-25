@@ -13,10 +13,10 @@
 
       <v-text-field dense label="Last Name" prepend-inner-icon="mdi-account-outline" v-model="lastname"></v-text-field>
 
-      <v-combobox dense label="Fonction" prepend-inner-icon="mdi-account-hard-hat-outline"
-        :items="fonctions" v-model="fonction" item-title="name" item-value="id" ></v-combobox>
-      
-        <v-btn class="mt-2" color="primary" block @click="handleRegister">
+      <v-select dense label="Fonction" prepend-inner-icon="mdi-account-hard-hat-outline" :items="fonctions"
+        v-model="fonction" item-title="name" item-value="id"></v-select>
+
+      <v-btn class="mt-2" color="primary" block @click="handleRegister">
         Register
       </v-btn>
     </v-card>
@@ -32,7 +32,7 @@
 
 <script>
 import axios from '@/services/axios';
-import { mapActions } from 'vuex/dist/vuex.cjs.js';
+import { mapActions, mapGetters } from 'vuex/dist/vuex.cjs.js';
 
 export default {
   name: 'Register',
@@ -50,22 +50,26 @@ export default {
       snackbarColor: '',
     };
   },
+  computed: {
+    ...mapGetters(['getFonctions']),
+  },
   mounted() {
-    this.fetchFonctions();
+    this.fetchFonctionsMethod();
   },
 
   methods: {
-    ...mapActions(['registerAction']),
+    ...mapActions(['registerAction', "fetchFonctions"]),
     handleRegister() {
       const user = {
         matricule: this.matricule,
         email: this.email,
         firstname: this.firstname,
         lastname: this.lastname,
-        fonction_id: this.fonction.id
+        fonction_id: this.fonction
       };
 
       this.registerAction(user).then(() => {
+        this.$router.push('users');
         this.snackbarMessage = 'User registered successfully!';
         this.snackbarColor = 'success';
         this.snackbar = true;
@@ -76,10 +80,13 @@ export default {
         console.error('Error registering user:', error);
       });
     },
-    fetchFonctions() {
-      auth.getFonctions()
-        .then(({ data: { payload } }) => {
-          this.fonctions = payload.map(({ id, name }) => ({ id, name }));
+    fetchFonctionsMethod() {
+      this.fetchFonctions()
+        .then(() => {
+          this.fonctions = this.getFonctions;
+        })
+        .catch(error => {
+          console.error('Error fetching fonctions:', error);
         });
     },
 

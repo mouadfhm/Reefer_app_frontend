@@ -9,6 +9,10 @@
         </v-toolbar>
       </v-card-title>
       <!-- Users table -->
+      <v-col class="col" cols="12">
+        <v-btn class="addButton" @click="addUser"><v-icon>mdi-plus</v-icon>Add User</v-btn>
+      </v-col>
+
       <v-data-table :headers="headers" :items="users" class="table-background">
         <template v-slot:item.actions="{ item }">
           <v-btn outlined color="primary" @click="editUser(item)">
@@ -67,7 +71,7 @@
         <v-select dense label="Fonction" prepend-inner-icon="mdi-account-hard-hat-outline" :items="fonctions"
           v-model="userToEdit.fonction_id" item-title="name" item-value="id"></v-select>
 
-        <v-btn class="mt-2" color="primary" block @click="handleModification">
+        <v-btn class="mt-2" color="#77B0AA" block @click="handleModification">
           Update User
         </v-btn>
       </v-card>
@@ -190,6 +194,9 @@ export default {
       this.updateAction(this.userToEdit).then(() => {
         this.fetchUsersMethod();
       })
+    },
+    addUser() {
+      this.$router.push('users/create');
     }
   },
 };
@@ -198,7 +205,6 @@ export default {
 <style>
 .v-card {
   background-color: #E3FEF7;
-  padding: 0px;
   width: 100%;
 }
 
@@ -248,4 +254,9 @@ export default {
 .v-toolbar-title {
   color: #E3FEF7;
 }
+.addButton {
+  background-color: #77B0AA !important;
+  color: #E3FEF7 !important;
+}
+
 </style>
