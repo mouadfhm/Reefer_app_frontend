@@ -60,7 +60,12 @@ export default {
       this.selectVessel(vessel).then(() => {
         this.$router.push(`/load`);
       });
-    }
+    },
+    discharge(vessel) {
+      this.selectVessel(vessel).then(() => {
+        this.$router.push(`/discharge`);
+      });
+    },
   },
 };
 

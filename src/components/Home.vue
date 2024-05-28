@@ -52,16 +52,13 @@ export default {
       this.$router.push('/vessels');
     },
     Housekeeping_Button() {
-      // Handle Button 2 click
-      console.log('Button 2 clicked');
+      this.$router.push('/housekeeping');
     },
     Gate_Button() {
       // Handle Button 3 click
       console.log('Button 3 clicked');
     },
     Users_Button() {
-      // Handle Button 4 click
-      console.log('Button 4 clicked');
       this.$router.push('/users');
 
     },

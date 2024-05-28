@@ -35,7 +35,7 @@
       <v-card class="confirmation">
         <v-card-title>Change Plug Status</v-card-title>
         <v-card-text>
-          Do you want to change the status of this load or report an issue?
+          Do you want to change the plug status of this reefer or report an issue?
         </v-card-text>
         <v-card-actions>
           <v-btn @click="changeStatusMethod">Yes</v-btn>
@@ -60,6 +60,19 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="firstTierDialogL" max-width="500">
+        <v-card class="confirmation">
+          <v-card-title>Report an issue</v-card-title>
+          <v-card-text>
+            Do you want to move it to the first tier?
+          </v-card-text>
+          <v-card-actions>
+            <v-btn @click="sendMail">Yes</v-btn>
+            <v-btn @click="closefirstTierDialogL">No</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
   </div>
 </template>
 
@@ -89,6 +102,7 @@ export default {
       loads: [],
       plugDialog: false,
       issueDialog: false,
+      firstTierDialogL: false,
       currentItem: null, // State for the current item to change status
       issues: [],
       user:this.$store.state.user,
@@ -112,13 +126,14 @@ export default {
     this.fetchIssueTypesMethod();
   },
   methods: {
-    ...mapActions(['fetchload', 'changeStatus','fetchIssueTypes','addActionHistory']),
+    ...mapActions(['fetchload', 'changeStatus','fetchIssueTypes','addActionHistory','repportIssue']),
     applyFilter() {
       this.$refs.form.validate();
     },
     fetchLoadsMethod() {
       this.fetchload({vessel_id:this.$store.state.vessel.selectedVessel.id}).then(() => {
         this.loads=this.getLoads;
+        this.sortLoads();
         console.log(this.loads);
     })
     .catch((error) => {
@@ -144,6 +159,32 @@ export default {
       }
       return '';
     },
+    /**
+     * Sorts the loads array based on the action history of each reefer.
+     *
+     * The loads array is sorted in ascending order based on the difference
+     * in hours between the current time and the creation time of each reefer's
+     * action history. Reefers with a plug status of 'unplugged' and a creation
+     * time more than 4 hours ago are prioritized.
+     *
+     * @return {void} This function does not return a value.
+     */
+    sortLoads() {
+      const now = new Date();
+      this.loads.sort((a, b) => {
+        const aCreatedAt = new Date(a.reefer.action_history[0]?.created_at || 0);
+        const bCreatedAt = new Date(b.reefer.action_history[0]?.created_at || 0);
+        const aDiffHours = (now - aCreatedAt) / 36e5;
+        const bDiffHours = (now - bCreatedAt) / 36e5;
+
+        const aCondition = a.reefer.plug_status === 'unplugged' && aDiffHours > 4;
+        const bCondition = b.reefer.plug_status === 'unplugged' && bDiffHours > 4;
+
+        if (aCondition && !bCondition) return -1;
+        if (!aCondition && bCondition) return 1;
+        return 0;
+      });
+  },
     getItemValue(item, value) {
       const keys = value.split('.');
       return keys.reduce((acc, key) => (acc ? acc[key] : ''), item);
@@ -168,6 +209,27 @@ export default {
         });
       }
     },
+    reportIssueMethod(issue) {
+      if (this.currentItem) {
+        this.data={
+          reefer_id: this.currentItem.id,
+          type: issue.name
+        }
+        console.log(this.data);
+        this.repportIssue(this.data)
+        .then(() => {
+          this.issueDialog = false;
+          this.firstTierDialogL = true;
+          this.fetchLoadsMethod();
+          console.log('Issue reported');
+        });
+      }
+    },
+    sendMail() {
+        console.log('Sending email');
+        this.firstTierDialogL = false;
+      },
+
     openStatusDialog(item) {
       this.currentItem = item.reefer;
       this.plugDialog = true;
@@ -183,7 +245,10 @@ export default {
     },
     closeIssueDialog() {
       this.issueDialog = false;
-    }
+    },
+    closeFirstTierDialogL() {
+      this.firstTierDialogL = false;
+    },
   },
 };
 </script>

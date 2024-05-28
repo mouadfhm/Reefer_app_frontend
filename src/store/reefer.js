@@ -11,13 +11,14 @@ const mutations = {
 };
 
 const getters = {
-    getreefers: (state) => state.reefers,
+  getReefers: (state) => state.reefers,
 };
 
 const actions = {
-    fetchload({ commit },vessel) {
+
+    fetchReefers({ commit }) {
         return new Promise((resolve, reject) => {
-            CustomizedAxios.post("/load/byvessel",vessel)
+            CustomizedAxios.get("/reefers")
               .then((response) => {
                 commit("SET_REEFERS", response.data.payload);
                 resolve(response.data.payload);
@@ -26,7 +27,6 @@ const actions = {
                 reject(error);
               });
           });
-
     },
     changeStatus({ commit }, reefer) {
         return new Promise((resolve, reject) => {
