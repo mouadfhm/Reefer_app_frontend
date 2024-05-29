@@ -54,7 +54,7 @@
     </v-dialog>
     <v-dialog v-model="editDialog" max-width="500">
       <v-card class="edit mx-auto pa-12 pb-10" elevation="8" max-width="448" rounded="lg">
-        <div class="text-h6 mb-6">Modify User</div>
+        <div class="text-h6 mb-6">Update User</div>
 
         <v-text-field dense label="Matricule" prepend-inner-icon="mdi-account-outline"
           v-model="userToEdit.matricule"></v-text-field>
@@ -258,5 +258,4 @@ export default {
   background-color: #77B0AA !important;
   color: #E3FEF7 !important;
 }
-
 </style>

@@ -14,7 +14,7 @@ const mutations = {
 const actions = {
   updateHouseKeeping({ commit }, houseKeeping) {
     return new Promise((resolve, reject) => {
-      CustomizedAxios.post("houseKeeping/update", houseKeeping)
+      CustomizedAxios.post("/housekeeping/update", houseKeeping)
         .then((response) => {
           resolve(response.data.payload);
         })

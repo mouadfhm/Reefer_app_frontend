@@ -3,7 +3,7 @@
       <v-card class="pa-4">
         <v-card-title>
           <v-toolbar flat>
-            <v-toolbar-title>Reefers For Discharge List</v-toolbar-title>
+            <v-toolbar-title>Reefers For Gate IN List</v-toolbar-title>
             <v-divider class="mx-4" inset vertical></v-divider>
           </v-toolbar>
         </v-card-title>
@@ -12,7 +12,7 @@
           <v-btn class="filterButton" @click="applyFilter"><v-icon>mdi-filter</v-icon>Filter</v-btn>
         </v-col>
   
-        <v-data-table :headers="headers" :items="discharges" class="table-background elevation-1">
+        <v-data-table :headers="headers" :items="gates" class="table-background elevation-1">
           <template v-slot:item="{ item, index }">
             <tr :class="getRowClass(item)">
               <td v-for="header in headers" :key="header.value">
@@ -81,7 +81,7 @@
 import { mapActions, mapGetters } from 'vuex';
   
   export default {
-    name: 'discharges',
+    name: 'gates',
     data() {
       return {
         vessels: [],
@@ -96,10 +96,10 @@ import { mapActions, mapGetters } from 'vuex';
           { title: 'LOP', value: 'reefer.LOP',  },
           { title: 'Current LOC', value: 'reefer.current_LOC',  },
           { title: 'TEMP', value: 'reefer.temperature',  },
-          { title: 'Arrival time', value: 'arrival_time',  },
+          { title: 'Arrival time', value: 'arrival_at',  },
           { title: 'Plug status', value: 'reefer.plug_status', sortable: true },
         ],
-        discharges: [],
+        gates: [],
         plugDialog: false,
         issueDialog: false,
         firstTierDialogD: false,
@@ -110,7 +110,7 @@ import { mapActions, mapGetters } from 'vuex';
       };
     },
     computed: {
-      ...mapGetters(['getDischarges', 'getIssueTypes']),
+      ...mapGetters(['getGates', 'getIssueTypes']),
       filteredVessels() {
         return this.vessels.filter((vessel) => {
           return (
@@ -122,19 +122,19 @@ import { mapActions, mapGetters } from 'vuex';
       },
     },
     mounted() {
-      this.fetchdischargesMethod();
+      this.fetchGatesMethod();
       this.fetchIssueTypesMethod();
     },
     methods: {
-      ...mapActions(['fetchDischarges', 'changeStatus','fetchIssueTypes','addActionHistory','repportIssue']),
+      ...mapActions(['fetchGatesIn', 'changeStatus','fetchIssueTypes','addActionHistory','repportIssue']),
       applyFilter() {
         this.$refs.form.validate();
       },
-      fetchdischargesMethod() {
-        this.fetchDischarges({vessel_id:this.$store.state.vessel.selectedVessel.id}).then(() => {
-          this.discharges=this.getDischarges;
-          this.sortDischarges();
-          console.log(this.discharges);
+      fetchGatesMethod() {
+        this.fetchGatesIn().then(() => {
+          this.gates=this.getGates;
+          this.sortgates();
+          console.log(this.gates);
       })
       .catch((error) => {
         console.error(error);
@@ -159,9 +159,9 @@ import { mapActions, mapGetters } from 'vuex';
         }
         return '';
       },
-      sortDischarges() {
+      sortgates() {
         const now = new Date();
-        this.discharges.sort((a, b) => {
+        this.gates.sort((a, b) => {
           const aCreatedAt = new Date(a.reefer.action_history[0]?.created_at || 0);
           const bCreatedAt = new Date(b.reefer.action_history[0]?.created_at || 0);
           const aDiffHours = (now - aCreatedAt) / 36e5;
@@ -195,7 +195,7 @@ import { mapActions, mapGetters } from 'vuex';
             }
             console.log(this.currentItem.plug_status);
             this.plugDialog = false;
-            this.fetchdischargesMethod();
+            this.fetchGatesMethod();
           });
         }
       },
@@ -210,7 +210,7 @@ import { mapActions, mapGetters } from 'vuex';
           .then(() => {
             this.issueDialog = false;
             this.firstTierDialogD = true;
-            this.fetchdischargesMethod();
+            this.fetchGatesMethod();
             console.log('Issue reported');
           });
         }

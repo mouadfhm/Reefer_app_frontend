@@ -37,8 +37,8 @@
                                 {{ getItemValue(item, header.value) }}
                             </template>
                         </td>
-                        <td>
-                            <v-btn outlined color="primary" @click="editUser(item)">
+                        <td class="actions">
+                            <v-btn outlined color="primary" @click="editHouseKeepingDialog(item)">
                                 <v-icon left>mdi-pencil</v-icon>
                             </v-btn>
                             <v-btn outlined color="error" @click="confirmDelete(item)">
@@ -140,8 +140,8 @@
                 <v-text-field type="time" dense label="HouseKeeping Time"
                     prepend-inner-icon="mdi-clock-time-eight-outline" v-model="houseKeeping_time"></v-text-field>
 
-                <v-btn class="mt-2" color="#77B0AA" block @click="addHouseKeepingMethod">
-                    Add HouseKeeping
+                <v-btn class="mt-2" color="#77B0AA" block @click="editHouseKeeping">
+                    Update this HouseKeeping
                 </v-btn>
             </v-card>
         </v-dialog>
@@ -160,6 +160,7 @@ export default {
                 block: '',
                 bay: '',
                 row: '',
+                id: '',
                 reefer_id: '',
                 plan_position: '',
                 houseKeeping_time: '',
@@ -182,6 +183,7 @@ export default {
             firstTierDialogD: false,
             deleteDialog: false,
             addDialog: false,
+            editDialog: false,
             currentItem: null, // State for the current item to change status
             issues: [],
             user: this.$store.state.user,
@@ -218,7 +220,8 @@ export default {
             'repportIssue',
             'deleteHouseKeeping',
             'addHouseKeeping',
-            'fetchReefers'
+            'fetchReefers',
+            'updateHouseKeeping'
         ]),
         applyFilter() {
             this.$refs.form.validate();
@@ -310,6 +313,30 @@ export default {
                     this.addDialog = false;
                     this.fetchHouseKeepingsMethod();
                 });
+        },
+        editHouseKeepingDialog(item) {
+            this.id = item.id;
+            this.reefer_id = item.reefer_id;
+            this.plan_position = item.plan_position;
+            try{this.houseKeeping_date = item.HK_time.split(' ')[0];}catch(e){console.log(e)}
+            try{this.houseKeeping_time = item.HK_time.split(' ')[1];}catch(e){console.log(e)}
+            this.editDialog = true;
+        },
+        editHouseKeeping() {
+            this.houseKeeping = {
+                id:this.id,
+                reefer_id: this.reefer_id,
+                plan_position: this.plan_position,
+                HK_time: this.houseKeeping_date + ' ' + this.houseKeeping_time + ':00'
+            };
+
+            if (this.houseKeeping) {
+                this.updateHouseKeeping(this.houseKeeping)
+                    .then(() => {
+                        this.editDialog = false;
+                        this.fetchHouseKeepingsMethod();
+                    });
+            }
         },
         addHKDialog() {
             this.addDialog = true;

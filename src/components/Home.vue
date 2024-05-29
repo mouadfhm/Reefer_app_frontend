@@ -37,6 +37,20 @@
         </v-col>
       </v-row>
     </v-container>
+    <v-dialog v-model="gateDialog" max-width="500">
+            <v-card class="gate_card">
+                <v-card-title>Gate IN/OUT</v-card-title>
+                <!-- <v-card-text>
+                    Are you sure you want to delete this HouseKeeping?
+                </v-card-text> -->
+                <v-card-actions class="gate">
+                    <v-btn class="gate_buttons" @click="gateIn">Gate IN</v-btn>
+                    <P class="gate_text"  > OR </P>
+                    <v-btn class="gate_buttons" @click="gateOut">Gate OUT</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
   </div>
 </template>
 
@@ -45,6 +59,11 @@ import { mapActions } from 'vuex';
 
 export default {
   name: 'ButtonPage',
+  data() {
+    return {
+      gateDialog: false
+    };
+  },
   methods: {
     ...mapActions(['logoutAction']),
     Vessels_Button() {
@@ -55,8 +74,13 @@ export default {
       this.$router.push('/housekeeping');
     },
     Gate_Button() {
-      // Handle Button 3 click
-      console.log('Button 3 clicked');
+      this.gateDialog = true;
+    },
+    gateIn() {
+      this.$router.push('/gatein');
+    },
+    gateOut() {
+      this.$router.push('/gateout');
     },
     Users_Button() {
       this.$router.push('/users');
@@ -111,5 +135,34 @@ export default {
   text-decoration: underline ;
   background: none;
   box-shadow: none;
+}
+.gate{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 7% 10px 7%; 
+}
+.gate_buttons{
+  margin: 10px;
+  border-radius: 10px !important;
+  text-align: center;
+  background-color: #E3FEF7 !important;
+  color: #003C43 !important;
+  width: 100px;
+  padding: 10px 70px 10px 70px;  
+}
+.gate_card{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #135D66;
+  border-radius: 8px;
+  padding: 10px 7% 10px 7%;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #E3FEF7 !important;
+}
+.gate_text{
+  margin: 20px;
 }
 </style>

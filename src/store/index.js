@@ -11,6 +11,7 @@ import actionHistory from './actionHistory';
 import issue from './issue';
 import discharge from './discharge';
 import houseKeeping from './houseKeeping';
+import gate from './gate';
 
 const vuexLocalStorage = new VuexPersist({
     key: "ReeferApp",
@@ -25,7 +26,8 @@ const vuexLocalStorage = new VuexPersist({
       actionHistory: state.actionHistory,
       issue: state.issue  ,
       discharge: state.discharge,
-      houseKeeping: state.houseKeeping
+      houseKeeping: state.houseKeeping,
+      gate: state.gate
     }),
     filter: (mutation) => true,
   });
@@ -41,7 +43,8 @@ const Store = createStore({
       actionHistory: actionHistory,
       issue: issue,
       discharge: discharge,
-      houseKeeping: houseKeeping
+      houseKeeping: houseKeeping,
+      gate: gate
     },
     plugins: [vuexLocalStorage.plugin],
   })
