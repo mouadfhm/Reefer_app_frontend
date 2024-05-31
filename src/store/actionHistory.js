@@ -27,6 +27,18 @@ const actions = {
           });
 
     },
+    addActionHistoryHouseKeeping({ commit },data) {
+        return new Promise((resolve, reject) => {
+            CustomizedAxios.post("/actions/addHouseKeeping", data)
+              .then((response) => {
+                resolve(response.data.payload);
+              })
+              .catch((error) => {
+                reject(error);
+              });
+          });
+
+    },
 };
 
 export default {

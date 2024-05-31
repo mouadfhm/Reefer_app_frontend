@@ -3,7 +3,7 @@
       <v-card class="pa-4">
         <v-card-title>
           <v-toolbar flat>
-            <v-toolbar-title>Reefers For Gate IN List</v-toolbar-title>
+            <v-toolbar-title>Reefers For Gate OUT List</v-toolbar-title>
             <v-divider class="mx-4" inset vertical></v-divider>
           </v-toolbar>
         </v-card-title>

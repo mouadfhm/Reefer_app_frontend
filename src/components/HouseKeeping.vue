@@ -33,17 +33,17 @@
                                 <v-icon v-else-if="item.reefer.plug_status === 'unplugged'" color="red" size="x-large"
                                     @click="openStatusDialog(item)">mdi-close</v-icon>
                             </template>
+                            <template v-else-if="header.value === 'actions'">
+                                <v-btn outlined color="primary" @click="editHouseKeepingDialog(item)">
+                                    <v-icon left>mdi-pencil</v-icon>
+                                </v-btn>
+                                <v-btn outlined color="error" @click="confirmDelete(item)">
+                                    <v-icon left>mdi-delete</v-icon>
+                                </v-btn>
+                            </template>
                             <template v-else>
                                 {{ getItemValue(item, header.value) }}
                             </template>
-                        </td>
-                        <td class="actions">
-                            <v-btn outlined color="primary" @click="editHouseKeepingDialog(item)">
-                                <v-icon left>mdi-pencil</v-icon>
-                            </v-btn>
-                            <v-btn outlined color="error" @click="confirmDelete(item)">
-                                <v-icon left>mdi-delete</v-icon>
-                            </v-btn>
                         </td>
                     </tr>
                 </template>
@@ -107,8 +107,8 @@
             <v-card class="add mx-auto pa-12 pb-10" elevation="8" max-width="448" rounded="lg">
                 <div class="text-h6 mb-6">Add HouseKeeping</div>
 
-                <v-select label="Reefer ID" prepend-inner-icon="mdi-contain" :items="reefers"
-                    v-model="reefer_id" item-title="id" item-value="id"></v-select>
+                <v-select label="Reefer ID" prepend-inner-icon="mdi-contain" :items="reefers" v-model="reefer_id"
+                    item-title="id" item-value="id"></v-select>
 
                 <v-text-field dense label="Plan Position" prepend-inner-icon="mdi-map-marker-outline"
                     v-model="plan_position"></v-text-field>
@@ -128,8 +128,8 @@
             <v-card class="add mx-auto pa-12 pb-10" elevation="8" max-width="448" rounded="lg">
                 <div class="text-h6 mb-6">Update HouseKeeping</div>
 
-                <v-select label="Reefer ID" prepend-inner-icon="mdi-contain" :items="reefers"
-                    v-model="reefer_id" item-title="id" item-value="id"></v-select>
+                <v-select label="Reefer ID" prepend-inner-icon="mdi-contain" :items="reefers" v-model="reefer_id"
+                    item-title="id" item-value="id"></v-select>
 
                 <v-text-field dense label="Plan Position" prepend-inner-icon="mdi-map-marker-outline"
                     v-model="plan_position"></v-text-field>
@@ -221,7 +221,8 @@ export default {
             'deleteHouseKeeping',
             'addHouseKeeping',
             'fetchReefers',
-            'updateHouseKeeping'
+            'updateHouseKeeping',
+            'addActionHistoryHouseKeeping'
         ]),
         applyFilter() {
             this.$refs.form.validate();
@@ -307,9 +308,18 @@ export default {
                 plan_position: this.plan_position,
                 HK_time: this.houseKeeping_date + ' ' + this.houseKeeping_time + ':00'
             };
-            console.log(this.houseKeeping);
             this.addHouseKeeping(this.houseKeeping)
-                .then(() => {
+                .then((response) => {
+                    this.data = {
+                        reefer_id: this.reefer_id,
+                        user_id: this.$store.state.user.currentUser.id,
+                        housekeeping_id: response.id,
+                        type: 'Add HouseKeeping'
+                    }
+                    this.addActionHistoryHouseKeeping(this.data).then(() => {
+                        console.log('Action history added');
+
+                    })
                     this.addDialog = false;
                     this.fetchHouseKeepingsMethod();
                 });
@@ -318,21 +328,32 @@ export default {
             this.id = item.id;
             this.reefer_id = item.reefer_id;
             this.plan_position = item.plan_position;
-            try{this.houseKeeping_date = item.HK_time.split(' ')[0];}catch(e){console.log(e)}
-            try{this.houseKeeping_time = item.HK_time.split(' ')[1];}catch(e){console.log(e)}
+            try { this.houseKeeping_date = item.HK_time.split(' ')[0]; } catch (e) { console.log(e) }
+            try { this.houseKeeping_time = item.HK_time.split(' ')[1]; } catch (e) { console.log(e) }
             this.editDialog = true;
         },
         editHouseKeeping() {
             this.houseKeeping = {
-                id:this.id,
+                id: this.id,
                 reefer_id: this.reefer_id,
                 plan_position: this.plan_position,
-                HK_time: this.houseKeeping_date + ' ' + this.houseKeeping_time + ':00'
+                HK_time: this.houseKeeping_date + ' ' + this.houseKeeping_time
             };
 
             if (this.houseKeeping) {
                 this.updateHouseKeeping(this.houseKeeping)
-                    .then(() => {
+                    .then((response) => {
+                        this.data = {
+                            reefer_id: this.reefer_id,
+                            user_id: this.$store.state.user.currentUser.id,
+                            housekeeping_id: response.id,
+                            type: 'Update HouseKeeping'
+                        }
+                        this.addActionHistoryHouseKeeping(this.data).then(() => {
+                            console.log('Action history added');
+
+                        })
+
                         this.editDialog = false;
                         this.fetchHouseKeepingsMethod();
                     });
