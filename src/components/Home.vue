@@ -18,7 +18,7 @@
             Gate In/Out
           </v-btn>
         </v-col>
-        <v-col cols="12" md="6">
+        <v-col cols="12" md="6"  v-if="activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
           <v-btn class="buttons" block @click="Users_Button">
             Users
           </v-btn>
@@ -55,14 +55,21 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 
 export default {
   name: 'ButtonPage',
   data() {
     return {
-      gateDialog: false
+      gateDialog: false,
+      activeUser: null
     };
+  },
+  computed: {
+    ...mapGetters(['getCurrentUser']),
+  },
+  mounted() {
+    this.getActiveUser();
   },
   methods: {
     ...mapActions(['logoutAction']),
@@ -91,6 +98,9 @@ export default {
         console.log('Logout successful');
         this.$router.push('/login');
       });
+    },
+    getActiveUser() {
+      this.activeUser = this.getCurrentUser;
     }
   }
 };

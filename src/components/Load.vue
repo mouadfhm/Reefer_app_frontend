@@ -52,26 +52,26 @@
         </v-card-text>
         <v-card-actions>
           <div class="issuesDiv">
-            <v-row class="issuesRow"  v-for="issue in issues" :key="issue.id" cols="12">
+            <v-row class="issuesRow" v-for="issue in issues" :key="issue.id" cols="12">
               <v-btn class="dialogButton" @click="reportIssueMethod(issue)">{{ issue.name }}</v-btn>
             </v-row>
-          <v-btn class="dialogButton cancel" @click="closeIssueDialog">Cancel</v-btn>
-          </div> 
+            <v-btn class="dialogButton cancel" @click="closeIssueDialog">Cancel</v-btn>
+          </div>
         </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="firstTierDialogL" max-width="500">
-        <v-card class="confirmation">
-          <v-card-title>Report an issue</v-card-title>
-          <v-card-text>
-            Do you want to move it to the first tier?
-          </v-card-text>
-          <v-card-actions>
-            <v-btn @click="sendMail">Yes</v-btn>
-            <v-btn @click="closefirstTierDialogL">No</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <v-card class="confirmation">
+        <v-card-title>Report an issue</v-card-title>
+        <v-card-text>
+          Do you want to move it to the first tier?
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="sendMail">Yes</v-btn>
+          <v-btn @click="closefirstTierDialogL">No</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
   </div>
 </template>
@@ -90,13 +90,14 @@ export default {
         row: '',
       },
       headers: [
-        { title: 'Ctr ID', value: 'reefer.ctr_id',  },
-        { title: 'ISO', value: 'reefer.ISO',  },
-        { title: 'LOP', value: 'reefer.LOP',  },
-        { title: 'Current LOC', value: 'reefer.current_LOC',  },
-        { title: 'TEMP', value: 'reefer.temperature',  },
-        { title: 'Vessel plan position', value: 'plan_position',  },
-        { title: 'Estimated load time', value: 'estimated_time',  },
+        { title: 'Reefer ID', value: 'reefer.id' },
+        { title: 'Ctr ID', value: 'reefer.ctr_id', },
+        { title: 'ISO', value: 'reefer.ISO', },
+        { title: 'LOP', value: 'reefer.LOP', },
+        { title: 'Current LOC', value: 'reefer.current_LOC', },
+        { title: 'TEMP', value: 'reefer.temperature', },
+        { title: 'Vessel plan position', value: 'plan_position', },
+        { title: 'Estimated load time', value: 'estimated_time', },
         { title: 'Plug status', value: 'reefer.plug_status', sortable: true },
       ],
       loads: [],
@@ -105,8 +106,8 @@ export default {
       firstTierDialogL: false,
       currentItem: null, // State for the current item to change status
       issues: [],
-      user:this.$store.state.user,
-      data:[]
+      user: this.$store.state.user,
+      data: []
     };
   },
   computed: {
@@ -126,27 +127,27 @@ export default {
     this.fetchIssueTypesMethod();
   },
   methods: {
-    ...mapActions(['fetchload', 'changeStatus','fetchIssueTypes','addActionHistory','repportIssue']),
+    ...mapActions(['fetchload', 'changeStatus', 'fetchIssueTypes', 'addActionHistory', 'repportIssue']),
     applyFilter() {
       this.$refs.form.validate();
     },
     fetchLoadsMethod() {
-      this.fetchload({vessel_id:this.$store.state.vessel.selectedVessel.id}).then(() => {
-        this.loads=this.getLoads;
+      this.fetchload({ vessel_id: this.$store.state.vessel.selectedVessel.id }).then(() => {
+        this.loads = this.getLoads;
         this.sortLoads();
         console.log(this.loads);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+      })
+        .catch((error) => {
+          console.error(error);
+        });
     },
     fetchIssueTypesMethod() {
       this.fetchIssueTypes().then(() => {
         this.issues = this.getIssueTypes;
       })
-      .catch((error) => {
-        console.error(error);
-      });
+        .catch((error) => {
+          console.error(error);
+        });
     },
     getRowClass(item) {
       if (item.reefer.action_history && item.reefer.action_history[0]) {
@@ -184,7 +185,7 @@ export default {
         if (!aCondition && bCondition) return 1;
         return 0;
       });
-  },
+    },
     getItemValue(item, value) {
       const keys = value.split('.');
       return keys.reduce((acc, key) => (acc ? acc[key] : ''), item);
@@ -192,43 +193,43 @@ export default {
     changeStatusMethod() {
       if (this.currentItem) {
         this.changeStatus(this.currentItem)
-        .then(() => {
-          if(this.user.currentUser){
-            const data = {
+          .then(() => {
+            if (this.user.currentUser) {
+              const data = {
                 user_id: this.$store.state.user.currentUser.id,
                 reefer_id: this.currentItem.id,
               };
-            this.addActionHistory(data).then(() => {
-              console.log('Action history added');
-          })
+              this.addActionHistory(data).then(() => {
+                console.log('Action history added');
+              })
 
-          }
-          console.log(this.currentItem.plug_status);
-          this.plugDialog = false;
-          this.fetchLoadsMethod();
-        });
+            }
+            console.log(this.currentItem.plug_status);
+            this.plugDialog = false;
+            this.fetchLoadsMethod();
+          });
       }
     },
     reportIssueMethod(issue) {
       if (this.currentItem) {
-        this.data={
+        this.data = {
           reefer_id: this.currentItem.id,
           type: issue.name
         }
         console.log(this.data);
         this.repportIssue(this.data)
-        .then(() => {
-          this.issueDialog = false;
-          this.firstTierDialogL = true;
-          this.fetchLoadsMethod();
-          console.log('Issue reported');
-        });
+          .then(() => {
+            this.issueDialog = false;
+            this.firstTierDialogL = true;
+            this.fetchLoadsMethod();
+            console.log('Issue reported');
+          });
       }
     },
     sendMail() {
-        console.log('Sending email');
-        this.firstTierDialogL = false;
-      },
+      console.log('Sending email');
+      this.firstTierDialogL = false;
+    },
 
     openStatusDialog(item) {
       this.currentItem = item.reefer;
@@ -297,16 +298,19 @@ export default {
 .red-background {
   background-color: rgb(255, 107, 107) !important;
 }
+
 .dialogButton {
   background-color: #77B0AA !important;
   color: #E3FEF7 !important;
   border-radius: 8px !important;
   width: 100% !important;
-  margin: 7px ;
+  margin: 7px;
 }
+
 .cancel {
   margin-top: 20px !important;
 }
+
 .issuesDiv {
   display: flex !important;
   flex-direction: column !important;
@@ -316,6 +320,7 @@ export default {
   padding: 20px 0px 20px 0px;
   width: fit-content;
 }
+
 .issuesRow {
   display: flex !important;
   flex-direction: row !important;

@@ -9,7 +9,8 @@
             </v-card-title>
 
             <v-col class="col" cols="12">
-                <v-btn class="addButton" @click="addHKDialog">
+                <v-btn class="addButton" @click="addHKDialog"
+                    v-if="activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
                     <v-icon>mdi-plus</v-icon>Add HouseKeeping
                 </v-btn>
                 <v-btn class="filterButton" @click="applyFilter">
@@ -33,7 +34,8 @@
                                 <v-icon v-else-if="item.reefer.plug_status === 'unplugged'" color="red" size="x-large"
                                     @click="openStatusDialog(item)">mdi-close</v-icon>
                             </template>
-                            <template v-else-if="header.value === 'actions'">
+                            <template
+                                v-else-if="header.value === 'actions' && activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
                                 <v-btn outlined color="primary" @click="editHouseKeepingDialog(item)">
                                     <v-icon left>mdi-pencil</v-icon>
                                 </v-btn>
@@ -48,6 +50,11 @@
                     </tr>
                 </template>
             </v-data-table>
+            <v-btn class="uploadButton" @click="triggerFileUpload">
+                <v-icon>mdi-upload</v-icon>Upload HouseKeepings
+            </v-btn>
+            <input type="file" ref="fileInput" style="display: none;" @change="handleFileUpload">
+
         </v-card>
 
         <v-dialog v-model="plugDialog" max-width="500">
@@ -150,6 +157,7 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex';
+import * as XLSX from 'xlsx';
 
 export default {
     name: 'houseKeeping',
@@ -165,8 +173,11 @@ export default {
                 plan_position: '',
                 houseKeeping_time: '',
                 houseKeeping_date: '',
+                activeUser: null
+
             },
             headers: [
+                { title: 'Reefer ID', value: 'reefer.id' },
                 { title: 'Ctr ID', value: 'reefer.ctr_id' },
                 { title: 'ISO', value: 'reefer.ISO' },
                 { title: 'LOP', value: 'reefer.LOP' },
@@ -177,6 +188,7 @@ export default {
                 { title: 'Plug status', value: 'reefer.plug_status', sortable: true, class: 'sortable-header' },
                 { title: 'Actions', value: 'actions', sortable: false }
             ],
+
             houseKeepings: [],
             plugDialog: false,
             issueDialog: false,
@@ -195,7 +207,7 @@ export default {
         };
     },
     computed: {
-        ...mapGetters(['getHouseKeeping', 'getIssueTypes', 'getReefers']),
+        ...mapGetters(['getHouseKeeping', 'getIssueTypes', 'getReefers', 'getCurrentUser']),
         filteredVessels() {
             return this.vessels.filter((vessel) => {
                 return (
@@ -210,6 +222,8 @@ export default {
         this.fetchHouseKeepingsMethod();
         this.fetchIssueTypesMethod();
         this.fetchReefersMethod();
+        this.getActiveUser();
+        this.getHeaders();
     },
     methods: {
         ...mapActions([
@@ -399,7 +413,88 @@ export default {
         },
         closeDelDialog() {
             this.deleteDialog = false;
+        },
+        getActiveUser() {
+            this.activeUser = this.getCurrentUser;
+        },
+        getHeaders() {
+            if (this.activeUser && this.activeUser.fonction && this.activeUser.fonction.name !== 'FONC1') {
+                this.headers.pop()
+            }
+        },
+        triggerFileUpload() {
+            this.$refs.fileInput.click();
+        },
+
+        handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    this.processExcelData(jsonData);
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        },
+
+        convertExcelDate(excelSerialDate) {
+            const excelBaseDate = new Date(Date.UTC(1899, 11, 30)); // Excel's base date
+            const jsDate = new Date(excelBaseDate.getTime() + excelSerialDate * 86400000); // 86400000 ms per day
+            return jsDate;
+        },
+
+        formatDateTime(date) {
+            const pad = (num) => num.toString().padStart(2, '0');
+            const yyyy = date.getUTCFullYear();
+            const mm = pad(date.getUTCMonth() + 1);
+            const dd = pad(date.getUTCDate());
+            const hh = pad(date.getUTCHours());
+            const min = pad(date.getUTCMinutes());
+            const ss = pad(date.getUTCSeconds());
+            return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+        },
+
+        processExcelData(data) {
+            const houseKeepings = data.slice(1).map(row => {
+                const datePart = this.convertExcelDate(row[2]);
+                const timePart = this.convertExcelDate(row[3]);
+                const formattedDate = this.formatDateTime(datePart);
+                const formattedTime = this.formatDateTime(timePart).split(' ')[1]; // Extract only the time part
+
+                return {
+                    reefer_id: row[0],
+                    plan_position: row[1],
+                    HK_time: `${formattedDate.split(' ')[0]} ${formattedTime}`
+                };
+            });
+
+            houseKeepings.forEach(houseKeeping => {
+                console.log(houseKeeping);
+                this.addHouseKeeping(houseKeeping)
+                    .then(response => {
+                        const actionData = {
+                            reefer_id: houseKeeping.reefer_id,
+                            user_id: this.$store.state.user.currentUser.id,
+                            housekeeping_id: response.id,
+                            type: 'Add HouseKeeping'
+                        };
+                        this.addActionHistoryHouseKeeping(actionData).then(() => {
+                            console.log('Action history added');
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error adding housekeeping:', error);
+                    });
+            });
+
+            this.fetchHouseKeepingsMethod();
         }
+
     }
 };
 </script>
@@ -489,5 +584,12 @@ export default {
 
 .sortable-icon {
     margin-left: 5px;
+}
+
+.uploadButton {
+    background-color: #77B0AA !important;
+    color: #E3FEF7 !important;
+    margin-top: 10px;
+
 }
 </style>
