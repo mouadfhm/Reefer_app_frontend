@@ -26,6 +26,17 @@ const actions = {
         });
     });
   },
+  firstTierIssue({ commit }, issue) {
+    return new Promise((resolve, reject) => {
+      CustomizedAxios.post("/issues/firstTier", issue)
+        .then((response) => {
+          resolve(response.data.payload);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  },
 };
 
 export default {

@@ -9,10 +9,15 @@
       </v-card-title>
 
       <v-col class="col" cols="12">
-        <v-btn class="filterButton" @click="applyFilter"><v-icon>mdi-filter</v-icon>Filter</v-btn>
+        <v-btn class="filterButton" @click="filterClick"><v-icon>mdi-filter</v-icon>Filter</v-btn>
+      </v-col>
+      <v-col class="col" cols="12" v-if="filterClicked">
+        <v-text-field v-model="filter.block" label="Block" class="filterInput mr-2" @input="applyFilter"></v-text-field>
+        <v-text-field v-model="filter.bay" label="Bay" class="filterInput mr-2" @input="applyFilter"></v-text-field>
+        <v-text-field v-model="filter.row" label="Row" class="filterInput mr-2" @input="applyFilter"></v-text-field>
       </v-col>
 
-      <v-data-table :headers="headers" :items="loads" class="table-background elevation-1">
+      <v-data-table :headers="headers" :items="filteredLoads" class="table-background elevation-1">
         <template v-slot:item="{ item, index }">
           <tr :class="getRowClass(item)">
             <td v-for="header in headers" :key="header.value">
@@ -67,7 +72,7 @@
           Do you want to move it to the first tier?
         </v-card-text>
         <v-card-actions>
-          <v-btn @click="sendMail">Yes</v-btn>
+          <v-btn @click="sendMail()">Yes</v-btn>
           <v-btn @click="closefirstTierDialogL">No</v-btn>
         </v-card-actions>
       </v-card>
@@ -105,38 +110,51 @@ export default {
       issueDialog: false,
       firstTierDialogL: false,
       currentItem: null, // State for the current item to change status
+      currentIssue: null,
       issues: [],
       user: this.$store.state.user,
-      data: []
+      data: [],
+      filteredLoads: [],
+      filterClicked: false
     };
   },
   computed: {
     ...mapGetters(['getLoads', 'getIssueTypes']),
-    filteredVessels() {
-      return this.vessels.filter((vessel) => {
-        return (
-          (!this.filter.block || vessel.block.includes(this.filter.block)) &&
-          (!this.filter.bay || vessel.bay.includes(this.filter.bay)) &&
-          (!this.filter.row || vessel.row.includes(this.filter.row))
-        );
-      });
-    },
   },
   mounted() {
     this.fetchLoadsMethod();
     this.fetchIssueTypesMethod();
   },
   methods: {
-    ...mapActions(['fetchload', 'changeStatus', 'fetchIssueTypes', 'addActionHistory', 'repportIssue']),
+    ...mapActions(['fetchload',
+      'changeStatus',
+      'fetchIssueTypes',
+      'addActionHistory',
+      'repportIssue',
+      'firstTierIssue']),
     applyFilter() {
-      this.$refs.form.validate();
+      const { block, bay, row } = this.filter;
+
+      this.filteredLoads = this.loads.filter((load) => {
+        const currentLoc = load.reefer.current_LOC;
+        const blockMatch = block ? currentLoc.includes(`B${block}`) : true;
+        const bayMatch = bay ? currentLoc.includes(`b${bay}`) : true;
+        const rowMatch = row ? currentLoc.includes(`R${row}`) : true;
+
+        return blockMatch && bayMatch && rowMatch;
+      });
+    },
+    filterClick() {
+      this.filterClicked = this.filterClicked ? false : true;
     },
     fetchLoadsMethod() {
-      this.fetchload({ vessel_id: this.$store.state.vessel.selectedVessel.id }).then(() => {
-        this.loads = this.getLoads;
-        this.sortLoads();
-        console.log(this.loads);
-      })
+      this.fetchload({ vessel_id: this.$store.state.vessel.selectedVessel.id })
+        .then(() => {
+          this.loads = this.getLoads;
+          this.filteredLoads = this.loads; // Initialize filteredLoads with all loads
+          this.sortLoads();
+          console.log(this.loads);
+        })
         .catch((error) => {
           console.error(error);
         });
@@ -150,11 +168,15 @@ export default {
         });
     },
     getRowClass(item) {
-      if (item.reefer.action_history && item.reefer.action_history[0]) {
-        const createdAt = new Date(item.reefer.action_history[0].created_at);
+      const { action_history, plug_status } = item.reefer;
+      const unpluggedAction = action_history.find(action => action.type === 'unplug');
+
+      if (unpluggedAction) {
+        const createdAt = new Date(unpluggedAction.created_at);
         const now = new Date();
         const diffHours = (now - createdAt) / 36e5;
-        if (diffHours > 2 && item.reefer.plug_status === 'unplugged') {
+
+        if (diffHours > 2 && plug_status === 'unplugged') {
           return 'red-background';
         }
       }
@@ -180,7 +202,7 @@ export default {
 
         const aCondition = a.reefer.plug_status === 'unplugged' && aDiffHours > 4;
         const bCondition = b.reefer.plug_status === 'unplugged' && bDiffHours > 4;
-
+        console.log(a, b);
         if (aCondition && !bCondition) return -1;
         if (!aCondition && bCondition) return 1;
         return 0;
@@ -212,6 +234,7 @@ export default {
     },
     reportIssueMethod(issue) {
       if (this.currentItem) {
+        this.currentIssue = issue;
         this.data = {
           reefer_id: this.currentItem.id,
           type: issue.name
@@ -227,7 +250,13 @@ export default {
       }
     },
     sendMail() {
-      console.log('Sending email');
+      this.data = {
+        reefer_id: this.currentItem.id,
+        type: this.currentIssue.name
+      }
+      this.firstTierIssue(this.data).then(() => {
+        console.log('Mail sent');
+      })
       this.firstTierDialogL = false;
     },
 

@@ -13,12 +13,19 @@
                     v-if="activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
                     <v-icon>mdi-plus</v-icon>Add HouseKeeping
                 </v-btn>
-                <v-btn class="filterButton" @click="applyFilter">
-                    <v-icon>mdi-filter</v-icon>Filter
-                </v-btn>
+                <v-btn class="filterButton" @click="filterClick"><v-icon>mdi-filter</v-icon>Filter</v-btn>
+            </v-col>
+            <v-col class="col" cols="12" v-if="filterClicked">
+                <v-text-field v-model="filter.block" label="Block" class="filterInput mr-2"
+                    @input="applyFilter"></v-text-field>
+                <v-text-field v-model="filter.bay" label="Bay" class="filterInput mr-2"
+                    @input="applyFilter"></v-text-field>
+                <v-text-field v-model="filter.row" label="Row" class="filterInput mr-2"
+                    @input="applyFilter"></v-text-field>
             </v-col>
 
-            <v-data-table :headers="headers" :items="houseKeepings" class="table-background elevation-1">
+
+            <v-data-table :headers="headers" :items="filteredHouseKeepings" class="table-background elevation-1">
                 <template v-slot:[`column.header`]="{ column }">
                     <span :class="[column.sortable ? 'sortable' : '']">
                         {{ column.text }}
@@ -86,14 +93,14 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-model="firstTierDialogD" max-width="500">
+        <v-dialog v-model="firstTierDialogH" max-width="500">
             <v-card class="confirmation">
                 <v-card-title>Report an issue</v-card-title>
                 <v-card-text>
                     Do you want to move it to the first tier?
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn @click="sendMail">Yes</v-btn>
+                    <v-btn @click="sendMail()">Yes</v-btn>
                     <v-btn @click="closefirstTierDialogD">No</v-btn>
                 </v-card-actions>
             </v-card>
@@ -192,7 +199,7 @@ export default {
             houseKeepings: [],
             plugDialog: false,
             issueDialog: false,
-            firstTierDialogD: false,
+            firstTierDialogH: false,
             deleteDialog: false,
             addDialog: false,
             editDialog: false,
@@ -203,20 +210,16 @@ export default {
             reefer_id: null,
             plan_position: '',
             houseKeeping_date: '',
-            houseKeeping_time: ''
+            houseKeeping_time: '',
+            filteredHouseKeepings: [],
+            filterClicked: false,
+            currentIssue: null,
+
+
         };
     },
     computed: {
-        ...mapGetters(['getHouseKeeping', 'getIssueTypes', 'getReefers', 'getCurrentUser']),
-        filteredVessels() {
-            return this.vessels.filter((vessel) => {
-                return (
-                    (!this.filter.block || vessel.block.includes(this.filter.block)) &&
-                    (!this.filter.bay || vessel.bay.includes(this.filter.bay)) &&
-                    (!this.filter.row || vessel.row.includes(this.filter.row))
-                );
-            });
-        }
+        ...mapGetters(['getHouseKeeping', 'getIssueTypes', 'getReefers', 'getCurrentUser',]),
     },
     mounted() {
         this.fetchHouseKeepingsMethod();
@@ -236,15 +239,30 @@ export default {
             'addHouseKeeping',
             'fetchReefers',
             'updateHouseKeeping',
-            'addActionHistoryHouseKeeping'
+            'addActionHistoryHouseKeeping',
+            'firstTierIssue',
+            'houseKeepingMail'
         ]),
         applyFilter() {
-            this.$refs.form.validate();
+            const { block, bay, row } = this.filter;
+
+            this.filteredHouseKeepings = this.houseKeepings.filter((houseKeeping) => {
+                const currentLoc = houseKeeping.reefer.current_LOC;
+                const blockMatch = block ? currentLoc.includes(`B${block}`) : true;
+                const bayMatch = bay ? currentLoc.includes(`b${bay}`) : true;
+                const rowMatch = row ? currentLoc.includes(`R${row}`) : true;
+
+                return blockMatch && bayMatch && rowMatch;
+            });
+        },
+        filterClick() {
+            this.filterClicked = this.filterClicked ? false : true;
         },
         fetchHouseKeepingsMethod() {
             this.fetchHouseKeeping()
                 .then(() => {
                     this.houseKeepings = this.getHouseKeeping;
+                    this.filteredHouseKeepings = this.houseKeepings;
                     console.log(this.houseKeepings);
                 })
                 .catch((error) => {
@@ -270,11 +288,15 @@ export default {
                 });
         },
         getRowClass(item) {
-            if (item.reefer.action_history && item.reefer.action_history[0]) {
-                const createdAt = new Date(item.reefer.action_history[0].created_at);
+            const { action_history, plug_status } = item.reefer;
+            const unpluggedAction = action_history.find(action => action.type === 'unplug');
+
+            if (unpluggedAction) {
+                const createdAt = new Date(unpluggedAction.created_at);
                 const now = new Date();
                 const diffHours = (now - createdAt) / 36e5;
-                if (diffHours > 2 && item.reefer.plug_status === 'unplugged') {
+
+                if (diffHours > 2 && plug_status === 'unplugged') {
                     return 'red-background';
                 }
             }
@@ -304,6 +326,7 @@ export default {
         },
         reportIssueMethod(issue) {
             if (this.currentItem) {
+                this.currentIssue = issue;
                 this.data = {
                     reefer_id: this.currentItem.id,
                     type: issue.name
@@ -324,12 +347,20 @@ export default {
             };
             this.addHouseKeeping(this.houseKeeping)
                 .then((response) => {
+                    console.log(response);
                     this.data = {
                         reefer_id: this.reefer_id,
-                        user_id: this.$store.state.user.currentUser.id,
+                        user_id: this.activeUser.id,
                         housekeeping_id: response.id,
-                        type: 'Add HouseKeeping'
+                        type: 'Add HouseKeeping',
+                        plan_position: response.plan_position,
+                        HK_time: response.HK_time,
+                        action: 'added'
+
                     }
+                    this.houseKeepingMail(this.data).then(() => {
+                        console.log('Email sent');
+                    })
                     this.addActionHistoryHouseKeeping(this.data).then(() => {
                         console.log('Action history added');
 
@@ -357,17 +388,24 @@ export default {
             if (this.houseKeeping) {
                 this.updateHouseKeeping(this.houseKeeping)
                     .then((response) => {
+                        if (response) {
                         this.data = {
                             reefer_id: this.reefer_id,
-                            user_id: this.$store.state.user.currentUser.id,
+                            user_id: this.activeUser.id,
                             housekeeping_id: response.id,
-                            type: 'Update HouseKeeping'
+                            type: 'Update HouseKeeping',
+                            plan_position: response.plan_position,
+                            HK_time: response.HK_time,
+                            action: 'updated'
                         }
+                        this.houseKeepingMail(this.data).then(() => {
+                            console.log('Email sent');
+                        })
                         this.addActionHistoryHouseKeeping(this.data).then(() => {
                             console.log('Action history added');
 
                         })
-
+                    }
                         this.editDialog = false;
                         this.fetchHouseKeepingsMethod();
                     });
@@ -382,8 +420,20 @@ export default {
         },
         deleteHKConfirmed() {
             if (this.houseKeeping) {
+                console.log(this.houseKeeping);
                 this.deleteHouseKeeping(this.houseKeeping)
-                    .then(() => {
+                    .then((response) => {
+                        if (response) {
+                            this.data = {
+                                reefer_id: response.reefer_id,
+                                plan_position: response.plan_position,
+                                HK_time: response.HK_time,
+                                action: 'updated'
+                            }
+                            this.houseKeepingMail(this.data).then(() => {
+                                console.log('Email sent');
+                            })
+                        }
                         this.firstTierDialogD = false;
                         this.fetchHouseKeepingsMethod();
                         this.deleteDialog = false;
@@ -391,8 +441,14 @@ export default {
             }
         },
         sendMail() {
-            console.log('Sending email');
-            this.firstTierDialogD = false;
+            this.data = {
+                reefer_id: this.currentItem.id,
+                type: this.currentIssue.name
+            }
+            this.firstTierIssue(this.data).then(() => {
+                console.log('Mail sent');
+            })
+            this.firstTierDialogH = false;
         },
         openStatusDialog(item) {
             this.currentItem = item.reefer;
@@ -479,7 +535,7 @@ export default {
                     .then(response => {
                         const actionData = {
                             reefer_id: houseKeeping.reefer_id,
-                            user_id: this.$store.state.user.currentUser.id,
+                            user_id: this.activeUser.id,
                             housekeeping_id: response.id,
                             type: 'Add HouseKeeping'
                         };

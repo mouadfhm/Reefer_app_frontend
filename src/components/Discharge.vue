@@ -9,10 +9,15 @@
       </v-card-title>
 
       <v-col class="col" cols="12">
-        <v-btn class="filterButton" @click="applyFilter"><v-icon>mdi-filter</v-icon>Filter</v-btn>
+        <v-btn class="filterButton" @click="filterClick"><v-icon>mdi-filter</v-icon>Filter</v-btn>
+      </v-col>
+      <v-col class="col" cols="12" v-if="filterClicked">
+        <v-text-field v-model="filter.block" label="Block" class="filterInput mr-2" @input="applyFilter"></v-text-field>
+        <v-text-field v-model="filter.bay" label="Bay" class="filterInput mr-2" @input="applyFilter"></v-text-field>
+        <v-text-field v-model="filter.row" label="Row" class="filterInput mr-2" @input="applyFilter"></v-text-field>
       </v-col>
 
-      <v-data-table :headers="headers" :items="discharges" class="table-background elevation-1">
+      <v-data-table :headers="headers" :items="filteredDischarges" class="table-background elevation-1">
         <template v-slot:item="{ item, index }">
           <tr :class="getRowClass(item)">
             <td v-for="header in headers" :key="header.value">
@@ -106,34 +111,47 @@ export default {
       firstTierDialogD: false,
       currentItem: null, // State for the current item to change status
       issues: [],
+      currentIssue: null,
       user: this.$store.state.user,
-      data: []
+      data: [],
+      filteredDischarges: [],
+      filterClicked: false
+
     };
   },
   computed: {
     ...mapGetters(['getDischarges', 'getIssueTypes']),
-    filteredVessels() {
-      return this.vessels.filter((vessel) => {
-        return (
-          (!this.filter.block || vessel.block.includes(this.filter.block)) &&
-          (!this.filter.bay || vessel.bay.includes(this.filter.bay)) &&
-          (!this.filter.row || vessel.row.includes(this.filter.row))
-        );
-      });
-    },
   },
   mounted() {
     this.fetchdischargesMethod();
     this.fetchIssueTypesMethod();
   },
   methods: {
-    ...mapActions(['fetchDischarges', 'changeStatus', 'fetchIssueTypes', 'addActionHistory', 'repportIssue']),
+    ...mapActions(['fetchDischarges', 
+      'changeStatus', 
+      'fetchIssueTypes', 
+      'addActionHistory', 
+      'repportIssue',
+      'firstTierIssue']),
     applyFilter() {
-      this.$refs.form.validate();
+      const { block, bay, row } = this.filter;
+
+      this.filteredDischarges = this.discharges.filter((discharge) => {
+        const currentLoc = discharge.reefer.current_LOC;
+        const blockMatch = block ? currentLoc.includes(`B${block}`) : true;
+        const bayMatch = bay ? currentLoc.includes(`b${bay}`) : true;
+        const rowMatch = row ? currentLoc.includes(`R${row}`) : true;
+
+        return blockMatch && bayMatch && rowMatch;
+      });
+    },
+    filterClick() {
+      this.filterClicked = this.filterClicked ? false : true;
     },
     fetchdischargesMethod() {
       this.fetchDischarges({ vessel_id: this.$store.state.vessel.selectedVessel.id }).then(() => {
         this.discharges = this.getDischarges;
+        this.filteredDischarges = this.discharges;
         this.sortDischarges();
         console.log(this.discharges);
       })
@@ -150,11 +168,15 @@ export default {
         });
     },
     getRowClass(item) {
-      if (item.reefer.action_history && item.reefer.action_history[0]) {
-        const createdAt = new Date(item.reefer.action_history[0].created_at);
+      const { action_history, plug_status } = item.reefer;
+      const unpluggedAction = action_history.find(action => action.type === 'unplug');
+
+      if (unpluggedAction) {
+        const createdAt = new Date(unpluggedAction.created_at);
         const now = new Date();
         const diffHours = (now - createdAt) / 36e5;
-        if (diffHours > 2 && item.reefer.plug_status === 'unplugged') {
+
+        if (diffHours > 2 && plug_status === 'unplugged') {
           return 'red-background';
         }
       }
@@ -202,6 +224,7 @@ export default {
     },
     reportIssueMethod(issue) {
       if (this.currentItem) {
+        this.currentIssue = issue;
         this.data = {
           reefer_id: this.currentItem.id,
           type: issue.name
@@ -217,7 +240,13 @@ export default {
       }
     },
     sendMail() {
-      console.log('Sending email');
+      this.data = {
+        reefer_id: this.currentItem.id,
+        type: this.currentIssue.name
+      }
+      this.firstTierIssue(this.data).then(() => {
+        console.log('Mail sent');
+      })
       this.firstTierDialogD = false;
     },
     openStatusDialog(item) {

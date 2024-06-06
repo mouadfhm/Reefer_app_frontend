@@ -57,6 +57,17 @@ const actions = {
         });
     });
   },
+  houseKeepingMail({ commit }, houseKeeping) {
+    return new Promise((resolve, reject) => {
+      CustomizedAxios.post("housekeeping/houseKeepingMail", houseKeeping)
+        .then((response) => {
+          resolve(response.data.payload);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
 
 };
 const getters = {
