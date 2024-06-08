@@ -19,6 +19,11 @@
           </v-btn>
         </v-col>
         <v-col cols="12" md="6"  v-if="activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
+          <v-btn class="buttons" block @click="Issues_Button">
+            Issues
+          </v-btn>
+        </v-col>
+        <v-col cols="12" md="6"  v-if="activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
           <v-btn class="buttons" block @click="Users_Button">
             Users
           </v-btn>
@@ -88,6 +93,10 @@ export default {
     },
     gateOut() {
       this.$router.push('/gateout');
+    },
+    Issues_Button() {
+      this.$router.push('/issues');
+
     },
     Users_Button() {
       this.$router.push('/users');

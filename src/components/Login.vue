@@ -18,16 +18,12 @@
         density="compact" placeholder="Enter your password" prepend-inner-icon="mdi-lock-outline" variant="outlined"
         @click:append-inner="visible = !visible" v-model="password"></v-text-field>
 
-      <v-card class="mb-12" color="surface-variant" variant="tonal">
-      </v-card>
 
       <v-btn class="mb-8" color="blue" size="large" variant="tonal" block @click="handleLogin"
         @keydown.enter="handleLogin">
         Log In
       </v-btn>
 
-      <v-card-text class="text-center">
-      </v-card-text>
     </v-card>
     <v-snackbar v-model="snackbar" :color="snackbarColor" multi-line timeout="3000">
       {{ snackbarMessage }}
@@ -42,7 +38,7 @@
 <style scoped>
 .background {
   background-color: #003C43;
-  height: 100vh;
+  height: 90vh;
   width: 100vw;
   display: flex;
   flex-direction: column;
@@ -54,7 +50,7 @@
   background-color: #135D66;
   color: #E3FEF7;
   border-radius: 8px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   width: 100vw;
   display: flex;
   flex-direction: column;
@@ -70,10 +66,11 @@
   background-color: #E3FEF7;
   color: #135D66 !important;
   width: 100%;
+  margin-top: 20px;
 }
 
 .v-img {
-  margin-bottom: 30px;
+  margin-bottom: 0px !important;
   width: 100vw;
   display: flex;
   flex-direction: column;

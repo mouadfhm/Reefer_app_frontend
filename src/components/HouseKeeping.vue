@@ -57,7 +57,7 @@
                     </tr>
                 </template>
             </v-data-table>
-            <v-btn class="uploadButton" @click="triggerFileUpload">
+            <v-btn class="uploadButton" @click="triggerFileUpload" v-if="activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
                 <v-icon>mdi-upload</v-icon>Upload HouseKeepings
             </v-btn>
             <input type="file" ref="fileInput" style="display: none;" @change="handleFileUpload">

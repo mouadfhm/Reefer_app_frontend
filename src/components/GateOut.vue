@@ -17,7 +17,7 @@
         <v-text-field v-model="filter.row" label="Row" class="filterInput mr-2" @input="applyFilter"></v-text-field>
       </v-col>
 
-      <v-data-table :headers="headers" :items="gates" class="table-background elevation-1">
+      <v-data-table :headers="headers" :items="filteredGates" class="table-background elevation-1">
         <template v-slot:item="{ item, index }">
           <tr :class="getRowClass(item)">
             <td v-for="header in headers" :key="header.value">

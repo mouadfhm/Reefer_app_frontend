@@ -182,16 +182,6 @@ export default {
       }
       return '';
     },
-    /**
-     * Sorts the loads array based on the action history of each reefer.
-     *
-     * The loads array is sorted in ascending order based on the difference
-     * in hours between the current time and the creation time of each reefer's
-     * action history. Reefers with a plug status of 'unplugged' and a creation
-     * time more than 4 hours ago are prioritized.
-     *
-     * @return {void} This function does not return a value.
-     */
     sortLoads() {
       const now = new Date();
       this.loads.sort((a, b) => {
@@ -202,7 +192,6 @@ export default {
 
         const aCondition = a.reefer.plug_status === 'unplugged' && aDiffHours > 4;
         const bCondition = b.reefer.plug_status === 'unplugged' && bDiffHours > 4;
-        console.log(a, b);
         if (aCondition && !bCondition) return -1;
         if (!aCondition && bCondition) return 1;
         return 0;

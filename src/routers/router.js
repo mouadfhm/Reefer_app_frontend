@@ -10,6 +10,7 @@ import Discharge from "../components/Discharge.vue";
 import HouseKeeping from "../components/HouseKeeping.vue";
 import GateIn from "../components/GateIn.vue";
 import GateOut from "../components/GateOut.vue";
+import Issues from "../components/Issues";
 
 import App from "@/App.vue";
 const router = createRouter({
@@ -29,6 +30,7 @@ const router = createRouter({
         { path: "/houseKeeping", component: HouseKeeping },
         { path: "/gateIn", component: GateIn },
         { path: "/gateOut", component: GateOut },
+        { path: "/issues", component: Issues },
       ],
     },
     { path: "/login", component: login },
