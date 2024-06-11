@@ -60,6 +60,29 @@ const actions = {
         });
     });
   },
+  moveToFirstTier({ commit }, issue) {
+    return new Promise((resolve, reject) => {
+      CustomizedAxios.post("/issues/movetofirsttier", issue)
+        .then((response) => {
+          resolve(response.data.payload);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  },
+  FirstTierConfirmed({ commit }, issue) {
+    return new Promise((resolve, reject) => {
+      CustomizedAxios.post("/issues/firstTierConfirmed", issue)
+        .then((response) => {
+          resolve(response.data.payload);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  },
+
   firstTierIssue({ commit }, issue) {
     return new Promise((resolve, reject) => {
       CustomizedAxios.post("/issues/firstTier", issue)

@@ -49,6 +49,7 @@
                 <v-card-actions>
                     <v-btn @click="changeStatusMethod">Yes</v-btn>
                     <v-btn @click="closeDialog">No</v-btn>
+                    <v-btn @click="firstTierDialog">First Tier</v-btn>
                     <v-btn @click="openIssueDialog">Issue fixed</v-btn>
                 </v-card-actions>
             </v-card>
@@ -64,6 +65,17 @@
                 <v-card-actions>
                     <v-btn color="primary" @click="deleteIssueMethod">Yes</v-btn>
                     <v-btn color="grey" text @click="closeIssueDialog">No</v-btn>
+                </v-card-actions>
+            </v-card> </v-dialog>
+        <v-dialog v-model="firstTierDialogI" max-width="500">
+            <v-card class="confirmation">
+                <v-card-title>Confirm Moving The Reefer To First Tier</v-card-title>
+                <v-card-text>
+                    Are you want to change the first tier status ?
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn color="primary" @click="moveToFirstTierMethode">Yes</v-btn>
+                    <v-btn color="grey" text @click="closeFirstTierDialog">No</v-btn>
                 </v-card-actions>
             </v-card> </v-dialog>
 
@@ -96,14 +108,14 @@ export default {
             ],
             plugDialog: false,
             issueDialog: false,
-            firstTierDialogGO: false,
             currentItem: null, // State for the current item to change status
             currentIssue: null,
             issues: [],
             user: this.$store.state.user,
             data: [],
             filteredIssues: [],
-            filterClicked: false
+            filterClicked: false,
+            firstTierDialogI: false,
         };
     },
     computed: {
@@ -117,7 +129,9 @@ export default {
             'changeStatus',
             'addActionHistory',
             'deleteIssue',
-            'issueFixedMail']),
+            'issueFixedMail',
+            'moveToFirstTier',
+            'FirstTierConfirmed']),
         applyFilter() {
             const { block, bay, row } = this.filter;
 
@@ -145,35 +159,37 @@ export default {
                 });
         },
         getRowClass(item) {
-      const { action_history, plug_status } = item.reefer;
-      const unpluggedAction = action_history.find(action => action.type === 'unplug');
+            const { action_history, plug_status } = item.reefer;
+            const unpluggedAction = action_history.find(action => action.type === 'unplug');
 
-      if (unpluggedAction) {
-        const createdAt = new Date(unpluggedAction.created_at);
-        const now = new Date();
-        const diffHours = (now - createdAt) / 36e5;
+            if (unpluggedAction) {
+                const createdAt = new Date(unpluggedAction.created_at);
+                const now = new Date();
+                const diffHours = (now - createdAt) / 36e5;
+                if (item.first_tier === 'true') {
+                    return 'blue-background';
+                }
+                if (diffHours > 2 && plug_status === 'unplugged') {
+                    return 'red-background';
+                }
+                return '';
+            }
+        },
+        sortIssues() {
+            const now = new Date();
+            this.issues.sort((a, b) => {
+                const aCreatedAt = new Date(a.reefer.action_history[0]?.created_at || 0);
+                const bCreatedAt = new Date(b.reefer.action_history[0]?.created_at || 0);
+                const aDiffHours = (now - aCreatedAt) / 36e5;
+                const bDiffHours = (now - bCreatedAt) / 36e5;
 
-        if (diffHours > 2 && plug_status === 'unplugged') {
-          return 'red-background';
-        }
-      }
-      return '';
-    },
-    sortIssues() {
-      const now = new Date();
-      this.issues.sort((a, b) => {
-        const aCreatedAt = new Date(a.reefer.action_history[0]?.created_at || 0);
-        const bCreatedAt = new Date(b.reefer.action_history[0]?.created_at || 0);
-        const aDiffHours = (now - aCreatedAt) / 36e5;
-        const bDiffHours = (now - bCreatedAt) / 36e5;
-
-        const aCondition = a.reefer.plug_status === 'unplugged' && aDiffHours > 4;
-        const bCondition = b.reefer.plug_status === 'unplugged' && bDiffHours > 4;
-        if (aCondition && !bCondition) return -1;
-        if (!aCondition && bCondition) return 1;
-        return 0;
-      });
-    },
+                const aCondition = a.reefer.plug_status === 'unplugged' && aDiffHours > 4;
+                const bCondition = b.reefer.plug_status === 'unplugged' && bDiffHours > 4;
+                if (aCondition && !bCondition) return -1;
+                if (!aCondition && bCondition) return 1;
+                return 0;
+            });
+        },
 
         getItemValue(item, value) {
             const keys = value.split('.');
@@ -209,8 +225,27 @@ export default {
                     })
             }
         },
+        firstTierDialog() {
+            this.firstTierDialogI = true;
+            this.plugDialog = false
+        },
+        closeFirstTierDialog() {
+            this.firstTierDialogI = false;
+        },
+        moveToFirstTierMethode() {
+            if (this.currentIssue) {
+                this.moveToFirstTier(this.currentIssue).then(() => {
+                    this.fetchIssueMethod();
+                    this.firstTierDialogI = false;
+                    this.FirstTierConfirmed(this.currentIssue).then(() => {
+                        console.log('First tier confirmed');
+                    });
+                })
+            }
+        },
         openStatusDialog(item) {
             this.currentIssue = item;
+            this.currentItem = item.reefer;
             this.plugDialog = true;
         },
         closeDialog() {
@@ -273,6 +308,10 @@ export default {
 
 .red-background {
     background-color: rgb(255, 107, 107) !important;
+}
+
+.blue-background {
+    background-color: rgb(107, 238, 255) !important;
 }
 
 .dialogButton {
