@@ -57,7 +57,8 @@
                     </tr>
                 </template>
             </v-data-table>
-            <v-btn class="uploadButton" @click="triggerFileUpload" v-if="activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
+            <v-btn class="uploadButton" @click="triggerFileUpload"
+                v-if="activeUser && activeUser.fonction && activeUser.fonction.name === 'FONC1'">
                 <v-icon>mdi-upload</v-icon>Upload HouseKeepings
             </v-btn>
             <input type="file" ref="fileInput" style="display: none;" @change="handleFileUpload">
@@ -389,29 +390,37 @@ export default {
                 this.updateHouseKeeping(this.houseKeeping)
                     .then((response) => {
                         if (response) {
-                        this.data = {
-                            reefer_id: this.reefer_id,
-                            user_id: this.activeUser.id,
-                            housekeeping_id: response.id,
-                            type: 'Update HouseKeeping',
-                            plan_position: response.plan_position,
-                            HK_time: response.HK_time,
-                            action: 'updated'
-                        }
-                        this.houseKeepingMail(this.data).then(() => {
-                            console.log('Email sent');
-                        })
-                        this.addActionHistoryHouseKeeping(this.data).then(() => {
-                            console.log('Action history added');
+                            this.data = {
+                                reefer_id: this.reefer_id,
+                                user_id: this.activeUser.id,
+                                housekeeping_id: response.id,
+                                type: 'Update HouseKeeping',
+                                plan_position: response.plan_position,
+                                HK_time: response.HK_time,
+                                action: 'updated'
+                            }
+                            this.houseKeepingMail(this.data).then(() => {
+                                console.log('Email sent');
+                            })
+                            this.addActionHistoryHouseKeeping(this.data).then(() => {
+                                console.log('Action history added');
 
-                        })
-                    }
+                            })
+                        }
                         this.editDialog = false;
                         this.fetchHouseKeepingsMethod();
                     });
+
             }
+
         },
         addHKDialog() {
+            this.id = null,
+            this.reefer_id = null,
+            this.plan_position = null,
+            this.houseKeeping_date = null,
+            this.houseKeeping_time = null
+
             this.addDialog = true;
         },
         confirmDelete(item) {
