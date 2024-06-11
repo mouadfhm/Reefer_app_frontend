@@ -30,7 +30,9 @@
                                 <v-icon v-else-if="item.reefer.plug_status === 'unplugged'" color="red" size="x-large"
                                     @click="openStatusDialog(item)">mdi-close</v-icon>
                             </template>
-
+                            <template v-else-if="header.value === 'first_tier'">
+                                {{ formatFirstTier(item.first_tier) }}
+                            </template>
                             <template v-else>
                                 {{ getItemValue(item, header.value) }}
                             </template>
@@ -104,6 +106,7 @@ export default {
                 { title: 'TEMP', value: 'reefer.temperature', },
                 { title: 'Issue', value: 'type', },
                 { title: 'Reported at', value: 'created_at', },
+                { title: 'First Tier', value: 'first_tier', sortable: true },
                 { title: 'Plug status', value: 'reefer.plug_status', sortable: true },
             ],
             plugDialog: false,
@@ -157,6 +160,13 @@ export default {
                 .catch((error) => {
                     console.error(error);
                 });
+        },
+        formatFirstTier(value) {
+            if (value === 'true') {
+                return 'Yes';
+            } else {
+                return 'No';
+            }
         },
         getRowClass(item) {
             const { action_history, plug_status } = item.reefer;
